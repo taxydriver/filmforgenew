@@ -1,0 +1,35 @@
+:1111 {
+  # Redirect /comfy -> /comfy/ so UI assets load with correct relative paths
+  @comfyRoot path /comfy
+  redir @comfyRoot /comfy/
+
+  # -------- ComfyUI at /comfy --------
+  handle_path /comfy/* {
+    # Binary-safe headers (range requests; no transform)
+    header {
+      Access-Control-Allow-Origin  *
+      Access-Control-Allow-Methods GET, POST, OPTIONS
+      Access-Control-Allow-Headers Content-Type, Authorization, Range
+      Access-Control-Expose-Headers Content-Length, Content-Range
+      Accept-Ranges                 bytes
+      Cache-Control                 no-transform
+    }
+
+    reverse_proxy 127.0.0.1:18188 {
+      # Speak HTTP/1.1 to upstream; Caddy will auto-upgrade WS as needed
+      transport http {
+        versions                1.1
+        read_timeout            0
+        write_timeout           0
+        response_header_timeout 0
+        dial_timeout            10s
+        keepalive               300s
+      }
+      # DO NOT set header_up Connection/Upgrade when using http/2 or at all here
+      flush_interval -1
+    }
+  }
+
+  # -------- Everything else -> your FastAPI portal --------
+  reverse_proxy 127.0.0.1:11111
+}

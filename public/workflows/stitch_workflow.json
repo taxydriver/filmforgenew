@@ -1,0 +1,24 @@
+{
+  "1": {
+    "inputs": {
+      "prefixes_json": "[\"wan_2025-11-05T09-41-22-488Z_shot_01_00001_.mp4\"]",
+      "video_dir": "/workspace/ComfyUI/output/video",
+      "audio_dir": "/workspace/ComfyUI/output/audio",
+      "dest_dir": "/workspace/trailer_output",
+      "dest_name": "trailer_final.mp4",
+      "audio_prefixes_json": "[]",
+      "fallback_latest_audio": true,
+      "music_gain_db": -8,
+      "fps": 24,
+      "scale": "1920:1080",
+      "use_shell_script": false,
+      "shell_script_path": "/workspace/stitch_trailer.sh",
+      "glob_override": "",
+      "audio_override": ""
+    },
+    "class_type": "FilmforgeStitch",
+    "_meta": {
+      "title": "Filmforge: Stitch Trailer"
+    }
+  }
+}
