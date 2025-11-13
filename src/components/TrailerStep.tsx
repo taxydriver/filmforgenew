@@ -217,7 +217,7 @@ This step only runs when you click:
     setIsStoryboardLoading(true);
     try {
       const shotPlan = await planShotsFromScreenplay(screenplay, 4, modelProvider);
-      const shots = (shotPlan?.shots ?? shotPlan?.results ?? []) as StoryboardShot[];
+      const shots = (shotPlan?.shots ?? []) as StoryboardShot[];
       if (!shots.length) return;
 
       setStoryboardShots(shots);
@@ -292,7 +292,9 @@ This step only runs when you click:
     (index: number, field: "prompt" | "negative", value: string) => {
       setStoryboardShots((prev) => {
         const next = [...prev];
-        const current = next[index] ?? {};
+        const current: StoryboardShot =
+        next[index] ?? { prompt: "", negative: "" };
+
         next[index] = { ...current, [field]: value };
         storyboardShotsRef.current = next;
         onArtifactsChange?.({ storyboardShots: next });

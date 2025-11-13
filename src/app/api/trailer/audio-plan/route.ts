@@ -42,7 +42,6 @@ function buildFallbackAudioPlan(params: {
     key: "Am",
     stems: ["music", "sfx"],
     timeline,
-    stable_audio_prompt: stableAudioPrompt,
     mix_notes: "Fallback audio plan; keep VO clear and end with gentle tail.",
   };
 }
@@ -78,8 +77,7 @@ export async function POST(req: NextRequest) {
     } catch (err: any) {
       console.warn("[audio-plan] LLM parse fallback", err);
       const fallbackPlan = buildFallbackAudioPlan({ screenplay, shots, duration });
-      const prompt =
-        fallbackPlan.stable_audio_prompt || musicPromptFromPlan(fallbackPlan);
+      const prompt =  musicPromptFromPlan(fallbackPlan);
       return Response.json({
         ok: true,
         plan: fallbackPlan,
