@@ -12,6 +12,7 @@ export type PortraitResult = {
   type?: string;         // e.g. "output"
   error?: string;
 };
+
 export type PortraitMap = Record<string, PortraitResult[]>;
 
 export async function generatePortraitsForCharacters(
