@@ -70,7 +70,9 @@ export default function App() {
   const [isAutoRun, setIsAutoRun] = useState(false);
   const [autoRunStatus, setAutoRunStatus] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
   const [autoRunError, setAutoRunError] = useState<string | null>(null);
+  const [autoRunTrailer, setAutoRunTrailer] = useState(false);
   const autoProgressRef = useRef<number>(0); // 0..4
+  
 
   // refs for auto-scroll
   const stepRefs = {
@@ -227,6 +229,7 @@ export default function App() {
     if (isAutoRun) return;
     setIsAutoRun(true);
     setAutoRunStatus('running');
+    setAutoRunTrailer(false);
     setAutoRunError(null);
     autoProgressRef.current = 0;
 
@@ -262,6 +265,7 @@ export default function App() {
         storychars: storychars ?? projectData.storychars,
       });
       updateProjectData('trailer', trailer);
+      setAutoRunTrailer(true);
       autoProgressRef.current = 4;
 
       setAutoRunStatus('done');
@@ -433,6 +437,8 @@ export default function App() {
                     modelProvider={modelProvider}
                     onUpdate={(v) => updateProjectData('trailer', v)}
                     onBack={() => goToStep('storychars')}
+                    autoRun={autoRunTrailer}
+                    onAutoRunConsumed={() => setAutoRunTrailer(false)}
 
                     // NEW: persist/display artifacts
                     initialShots={initialTrailerShots}

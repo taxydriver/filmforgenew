@@ -8,7 +8,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <FilmforgeChatProvider>
           {children}
-          <GlobalChatDock />
+        
         </FilmforgeChatProvider>
       </body>
     </html>

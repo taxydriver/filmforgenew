@@ -18,10 +18,10 @@ copy tools/filmforge_stitch folder to /comfyui/custom-nodes/
 
 restart comfyui on 8188 if you wanna see interace from portal
 
-
 pkill -f "python main.py"
 cd /workspace/ComfyUI
 python main.py --listen 0.0.0.0 --port 8188
+
 
 
 

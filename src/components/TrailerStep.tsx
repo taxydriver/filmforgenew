@@ -42,8 +42,8 @@ interface TrailerStepProps {
     stitchedUrl: string;
   }>) => void;
 
-  // NOTE: was in your code but not in the original TrailerStepProps – adding it here
   autoRun?: boolean;
+  onAutoRunConsumed?: () => void;
 }
 
 export function TrailerStep({
@@ -51,6 +51,7 @@ export function TrailerStep({
   trailer,
   modelProvider,
   autoRun = false,
+  onAutoRunConsumed = () => {},
   storychars = null,
   onUpdate,
   onBack,
@@ -139,6 +140,8 @@ export function TrailerStep({
   const stillsRef = useRef(stills);
   const storyboardShotsRef = useRef(storyboardShots);
 
+
+  const autoRunTriggered = useRef(false);
   /* ---------- Initialize trailer workspace text ---------- */
   useEffect(() => {
     setLocalTrailer(trailer);
@@ -633,10 +636,22 @@ This step only runs when you click:
   ]);
 
   useEffect(() => {
-    if (autoRun) {
-      void handleGenerateTrailerFlow();
+    if (!autoRun) {
+      autoRunTriggered.current = false;
+      return;
     }
-  }, [autoRun, handleGenerateTrailerFlow]);
+    if (autoRunTriggered.current) return;
+    if (!screenplay.trim() || !storyboardShots.length) return;
+    autoRunTriggered.current = true;
+    onAutoRunConsumed();
+    void handleGenerateTrailerFlow();
+  }, [
+    autoRun,
+    screenplay,
+    storyboardShots.length,
+    handleGenerateTrailerFlow,
+    onAutoRunConsumed,
+  ]);
 
   const handleApiGenerateTrailer = useCallback(async () => {
     if (isTrailerApiLoading || !screenplay.trim()) return;

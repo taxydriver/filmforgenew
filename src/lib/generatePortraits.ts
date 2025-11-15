@@ -4,8 +4,15 @@ export type CharacterInput = {
   style?: string;
 };
 
-export type PortraitResult = { pose: string; url?: string; error?: string };
-
+export type PortraitResult = {
+  pose: string;
+  url?: string;          // for UI preview
+  filename?: string;     // e.g. "aigiri_front_00001_.png"
+  subfolder?: string;    // e.g. "characters/aigiri"
+  type?: string;         // e.g. "output"
+  error?: string;
+};
+c
 export type PortraitMap = Record<string, PortraitResult[]>;
 
 export async function generatePortraitsForCharacters(
