@@ -408,10 +408,368 @@ export default function StoryboardCharactersStep({
   // At the bottom, just update the Next button:
 
   return (
-    <div className="space-y-6">
-      {/* ... existing UI for shots, characters, mapping, portrait controls ... */}
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-semibold">Storyboard & Characters</h2>
+          <span className="text-sm text-slate-400">Generated from screenplay</span>
+        </div>
+        <Button
+          onClick={handleNextClick}
+          disabled={primaryDisabled}
+          className="bg-purple-600 hover:bg-purple-700 disabled:opacity-60"
+          title={hasTrailer ? "Go to trailer" : "Proceed to trailer render (img2vid + audio mux)"}
+        >
+          {primaryLabel}
+          <ArrowRight className="w-4 h-4 ml-2" />
+        </Button>
+      </div>
 
-      <div className="flex justify-between pt-4">
+      {error && (
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          <span>Failed to generate storyboard: {error}</span>
+          {onRetry && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onRetry}
+              className="bg-transparent border-red-400/60 text-red-200 hover:bg-red-500/20"
+            >
+              Try again
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Visual Settings */}
+      <div className="rounded-xl border border-slate-700 p-3 bg-slate-800/40">
+        <div className="flex flex-wrap gap-3 items-center">
+          <label className="text-sm text-slate-300">Style</label>
+          <select
+            value={opts.style}
+            onChange={(e) => setOpts((o) => ({ ...o, style: e.target.value as VisualStyle }))}
+            className="bg-slate-900 text-slate-100 text-sm border border-slate-600 rounded px-2 py-1"
+          >
+            <option value="cinematic_realistic">Cinematic Realism</option>
+            <option value="film_noir">Film Noir</option>
+            <option value="golden_hour_epic">Golden Hour Epic</option>
+            <option value="cyberpunk_neon">Cyberpunk Neon</option>
+            <option value="painterly_classic">Painterly Classic</option>
+            <option value="surreal_dream">Surreal Dream</option>
+            <option value="sci_fi_realistic">Sci-Fi Realism</option>
+          </select>
+
+          <label className="text-sm text-slate-300 ml-2">Lens</label>
+          <select
+            value={opts.lens}
+            onChange={(e) => setOpts((o) => ({ ...o, lens: e.target.value as Lens }))}
+            className="bg-slate-900 text-slate-100 text-sm border border-slate-600 rounded px-2 py-1"
+          >
+            <option value="35mm">35mm</option>
+            <option value="50mm">50mm</option>
+            <option value="85mm">85mm</option>
+            <option value="24mm">24mm</option>
+            <option value="135mm">135mm</option>
+          </select>
+
+          <label className="text-sm text-slate-300 ml-2">Color</label>
+          <select
+            value={opts.color}
+            onChange={(e) => setOpts((o) => ({ ...o, color: e.target.value as ColorMode }))}
+            className="bg-slate-900 text-slate-100 text-sm border border-slate-600 rounded px-2 py-1"
+          >
+            <option value="color">Color</option>
+            <option value="bw">B&amp;W</option>
+            <option value="warm">Warm</option>
+            <option value="cool">Cool</option>
+          </select>
+
+          <label className="text-sm text-slate-300 ml-2">Mood</label>
+          <select
+            value={opts.mood}
+            onChange={(e) => setOpts((o) => ({ ...o, mood: e.target.value as Mood }))}
+            className="bg-slate-900 text-slate-100 text-sm border border-slate-600 rounded px-2 py-1"
+          >
+            <option value="somber">Somber</option>
+            <option value="mysterious">Mysterious</option>
+            <option value="epic">Epic</option>
+            <option value="intimate">Intimate</option>
+            <option value="romantic">Romantic</option>
+            <option value="grim">Grim</option>
+            <option value="uplifting">Uplifting</option>
+          </select>
+
+          <label className="text-sm text-slate-300 ml-2">Lighting</label>
+          <select
+            multiple
+            value={opts.lighting || []}
+            onChange={(e) => {
+              const vals = Array.from(e.target.selectedOptions).map((o) => o.value as Lighting);
+              setOpts((o) => ({ ...o, lighting: vals }));
+            }}
+            className="bg-slate-900 text-slate-100 text-sm border border-slate-600 rounded px-2 py-1 min-w-[180px]"
+          >
+            <option value="volumetric">Volumetric</option>
+            <option value="tungsten_practicals">Tungsten Practicals</option>
+            <option value="rembrandt">Rembrandt</option>
+            <option value="backlit">Backlit</option>
+            <option value="softbox">Softbox</option>
+            <option value="hard">Hard</option>
+            <option value="neon">Neon</option>
+            <option value="overcast">Overcast</option>
+          </select>
+
+          <label className="text-sm text-slate-300 ml-2">Stock</label>
+          <select
+            value={opts.stock}
+            onChange={(e) => setOpts((o) => ({ ...o, stock: e.target.value as FilmStock }))}
+            className="bg-slate-900 text-slate-100 text-sm border border-slate-600 rounded px-2 py-1"
+          >
+            <option value="vision3_500t">Vision3 500T</option>
+            <option value="ektachrome">Ektachrome</option>
+            <option value="tri_x">TRI-X (B&amp;W)</option>
+          </select>
+
+          <label className="text-sm text-slate-300 ml-2">Aspect</label>
+          <select
+            value={aspect}
+            onChange={(e) => setAspect(e.target.value as any)}
+            className="bg-slate-900 text-slate-100 text-sm border-slate-600 rounded px-2 py-1"
+          >
+            <option value="landscape">Landscape</option>
+            <option value="portrait">Portrait</option>
+            <option value="square">Square</option>
+          </select>
+
+          <div className="ml-auto flex gap-2">
+            {onRetry && (
+              <Button
+                variant="outline"
+                onClick={onRetry}
+                className="bg-transparent border-slate-500 text-slate-200 hover:bg-slate-700/50"
+                title="Regenerate using your current defaults"
+              >
+                Quick Retry
+              </Button>
+            )}
+            <Button
+              onClick={regenerateWithOptions}
+              disabled={regenBusy}
+              className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60"
+              title={screenplay ? "" : "Pass screenplay prop to enable here"}
+            >
+              {regenBusy ? "Regenerating…" : "Regenerate with Options"}
+            </Button>
+            <Button
+              onClick={annotateTrailer}
+              disabled={annotateBusy || shots.length === 0}
+              className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60"
+              title="Auto-fill dialogue, music cues, SFX, fps/length from screenplay"
+            >
+              {annotateBusy ? "Annotating…" : (<span className="flex items-center gap-1"><Wand2 className="w-4 h-4" /> Auto-fill Dialogue & Music</span>)}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Show one global style prefix if detected */}
+      {globalPrefix && (
+        <div className="rounded-xl border border-slate-700 bg-slate-800/40 p-4">
+          <div className="text-xs uppercase tracking-wide text-slate-400 mb-1">Style Prompt</div>
+          <div className="text-[13px] text-slate-200 leading-relaxed">{globalPrefix}</div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-12 gap-4">
+        {/* Shots */}
+        <div className="col-span-7 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium">Shots</h3>
+            <label className="flex items-center text-xs text-slate-400 gap-1 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showFullPrompt}
+                onChange={(e) => setShowFullPrompt(e.target.checked)}
+                className="accent-purple-500"
+              />
+              Show full prompt
+            </label>
+          </div>
+
+          {shots.length === 0 ? (
+            <p className="text-sm text-slate-400">No shots yet.</p>
+          ) : (
+            <ul className="space-y-2">
+              {shots.map((s, idx) => {
+                const body = parts[idx]?.body ?? s.prompt;
+                return (
+                  <li key={s.id} className="rounded-xl border border-slate-700 p-3 space-y-2">
+                    <div className="text-xs text-slate-400 mb-1">
+                      Shot #{s.id} • {mapping[s.id]?.join(", ") || "No characters detected"}
+                    </div>
+                    <div className="text-slate-100 whitespace-pre-wrap">
+                      {showFullPrompt ? s.prompt : body}
+                    </div>
+
+                    {/* NEW: Trailer fields */}
+                    <div className="grid grid-cols-12 gap-2 text-sm">
+                      <div className="col-span-12 md:col-span-6">
+                        <label className="block text-[11px] text-slate-400">Dialogue / VO</label>
+                        <input
+                          value={s.dialogue || ""}
+                          onChange={(e) => updateShot(s.id, { dialogue: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-100"
+                          placeholder="KANE (V.O.): In a city that remembers everything…"
+                        />
+                      </div>
+                      <div className="col-span-12 md:col-span-6">
+                        <label className="block text-[11px] text-slate-400">Subtitle</label>
+                        <input
+                          value={s.subtitle || ""}
+                          onChange={(e) => updateShot(s.id, { subtitle: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-100"
+                          placeholder="In a city that remembers everything…"
+                        />
+                      </div>
+
+                      <div className="col-span-6 md:col-span-3">
+                        <label className="block text-[11px] text-slate-400">Music Cue</label>
+                        <input
+                          value={s.music_cue || ""}
+                          onChange={(e) => updateShot(s.id, { music_cue: e.target.value })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-100"
+                          placeholder="low drone / taiko rise / silence"
+                        />
+                      </div>
+
+                      <div className="col-span-6 md:col-span-3">
+                        <label className="block text-[11px] text-slate-400">SFX (comma list)</label>
+                        <input
+                          value={(s.sfx || []).join(", ")}
+                          onChange={(e) =>
+                            updateShot(s.id, {
+                              sfx: e.target.value
+                                .split(",")
+                                .map((x) => x.trim())
+                                .filter(Boolean),
+                            })
+                          }
+                          className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-100"
+                          placeholder="thunder, whoosh"
+                        />
+                      </div>
+
+                      <div className="col-span-4 md:col-span-2">
+                        <label className="block text-[11px] text-slate-400">FPS</label>
+                        <input
+                          type="number"
+                          min={8}
+                          max={30}
+                          value={s.fps ?? 12}
+                          onChange={(e) => updateShot(s.id, { fps: Number(e.target.value) || 12 })}
+                          className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-100"
+                        />
+                      </div>
+                      <div className="col-span-4 md:col-span-2">
+                        <label className="block text-[11px] text-slate-400">Frames</label>
+                        <input
+                          type="number"
+                          min={16}
+                          max={180}
+                          value={s.length_frames ?? 60}
+                          onChange={(e) =>
+                            updateShot(s.id, { length_frames: Number(e.target.value) || 60 })
+                          }
+                          className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-100"
+                        />
+                      </div>
+                      <div className="col-span-4 md:col-span-2">
+                        <label className="block text-[11px] text-slate-400">Strength</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min={0.05}
+                          max={0.35}
+                          value={s.strength ?? 0.15}
+                          onChange={(e) =>
+                            updateShot(s.id, { strength: Number(e.target.value) || 0.15 })
+                          }
+                          className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-100"
+                        />
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        {/* Characters */}
+        <div className="col-span-5 space-y-3">
+          <h3 className="text-lg font-medium">Characters</h3>
+          {characters.length === 0 ? (
+            <p className="text-sm text-slate-400">No characters yet.</p>
+          ) : (
+            <ul className="space-y-3">
+              {characters.map((c) => (
+                <li key={c.name} className="rounded-xl border border-slate-700 p-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-semibold">{c.name}</div>
+                      <div className="text-xs text-slate-400">{c.role}</div>
+                    </div>
+                    <button
+                      onClick={() => genPortraits(c)}
+                      className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-sm"
+                      disabled={portraitState[c.name]?.loading}
+                    >
+                      {portraitState[c.name]?.loading ? "Generating…" : "Generate Portraits"}
+                    </button>
+                  </div>
+                  <p className="text-sm mt-2 text-slate-200">{c.description}</p>
+                  {portraitState[c.name]?.status && (
+                    <p className="text-xs text-slate-400 mt-2">{portraitState[c.name]?.status}</p>
+                  )}
+                  {portraitState[c.name]?.progress && (
+                    <div className="mt-2 space-y-1">
+                      {Object.entries(portraitState[c.name]!.progress).map(([pose, info]) => (
+                        <div key={`${c.name}-${pose}`} className="text-[10px] text-slate-400">
+                          {pose.toUpperCase()}: {Math.round(info.pct)}%
+                          {info.eta ? ` · ETA ${info.eta}s` : ""}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {portraitState[c.name]?.error && (
+                    <p className="text-xs text-red-400 mt-2">{portraitState[c.name]?.error}</p>
+                  )}
+                  {portraitState[c.name]?.results?.length ? (
+                    <div className="grid grid-cols-3 gap-2 mt-3">
+                      {portraitState[c.name]!.results.map((r, idx) => (
+                        <div key={`${c.name}-${r.pose}-${idx}`} className="text-center">
+                          {r.url ? (
+                            <img
+                              src={r.url}
+                              alt={`${c.name} ${r.pose}`}
+                              className="w-full h-auto rounded border border-slate-600"
+                            />
+                          ) : (
+                            <div className="text-xs text-slate-400">No image</div>
+                          )}
+                          <p className="text-[10px] text-slate-400 mt-1 uppercase">{r.pose}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      <div className="flex justify-start pt-4">
         <Button
           variant="outline"
           onClick={onBack}
@@ -419,14 +777,6 @@ export default function StoryboardCharactersStep({
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Screenplay
-        </Button>
-        <Button
-          onClick={handleNextClick}       // ✅ was onNext()
-          disabled={primaryDisabled}
-          className="bg-purple-600 hover:bg-purple-500 text-white"
-        >
-          {primaryLabel}
-          <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>
     </div>

@@ -74,8 +74,6 @@ export function TrailerStep({
   const [isStillsLoading, setIsStillsLoading] = useState(false);
   const [isVideoStarting, setIsVideoStarting] = useState(false);
   const [scanBusy, setScanBusy] = useState(false);
-  const [isTrailerApiLoading, setIsTrailerApiLoading] = useState(false);
-  const [trailerApiError, setTrailerApiError] = useState<string | null>(null);
 
   /* ====================== AUDIO STATE ====================== */
   const sanitizeAudioList = useCallback((urls: string[] = []) => {
@@ -254,8 +252,37 @@ This step only runs when you click:
     setEta(0);
 
     try {
-      const prompts = storyboardShotsRef.current.map((s) => s.prompt);
-      const gen = await generateStills(prompts, (p: any) => {
+      // Build prompts with optional reference portraits from storychars (mapping + portraits)
+      const mapping = storychars?.mapping ?? {};
+      const portraits = storychars?.portraits ?? {};
+
+      const prompts = storyboardShotsRef.current.map((shot) => {
+        const shotId = shot.id;
+        const mappedChars: string[] = (shotId != null ? (mapping as any)[shotId] : null) || [];
+        const mainChar = mappedChars[0];
+
+        let refImages: { image: string; subfolder?: string; type?: string }[] | undefined;
+        if (mainChar && (portraits as any)[mainChar]?.length) {
+          const portrait = (portraits as any)[mainChar][0];
+          if (portrait?.filename) {
+            refImages = [
+              {
+                image: portrait.filename,
+                subfolder: portrait.subfolder ?? "characters",
+                type: portrait.type ?? "output",
+              },
+            ];
+          }
+        }
+
+        return {
+          prompt: shot.prompt,
+          negative: shot.negative ?? "cartoon, painting, sketch",
+          ...(refImages ? { refImages } : {}),
+        };
+      });
+
+      const gen = await generateStills(prompts as any, (p: any) => {
         if (p?.type === "progress") {
           setProgress(Math.round(Number(p.pct) || 0));
           setEta(Number(p.eta) || 0);
@@ -653,26 +680,6 @@ This step only runs when you click:
     onAutoRunConsumed,
   ]);
 
-  const handleApiGenerateTrailer = useCallback(async () => {
-    if (isTrailerApiLoading || !screenplay.trim()) return;
-    setIsTrailerApiLoading(true);
-    setTrailerApiError(null);
-    try {
-      const result = await generateTrailerStep({
-        screenplay,
-        provider: modelProvider,
-        storychars: storychars ?? null,
-      });
-      setLocalTrailer(result);
-      onUpdate(result);
-    } catch (err: any) {
-      console.error("[Trailer API] generate failed", err);
-      setTrailerApiError(toText(err?.message || err));
-    } finally {
-      setIsTrailerApiLoading(false);
-    }
-  }, [isTrailerApiLoading, screenplay, modelProvider, storychars, onUpdate]);
-
   /* ------------------------------ UI ----------------------------- */
   return (
     <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">
@@ -717,18 +724,6 @@ This step only runs when you click:
           )}
         </div>
 
-        {/* Breakdown text */}
-        {localTrailer && (
-          <div className="space-y-2">
-            <label className="text-sm text-slate-300">Trailer Notes</label>
-            <div className="bg-slate-900/50 border border-slate-600 rounded-lg p-4 max-h-96 overflow-y-auto">
-              <pre className="text-sm text-slate-300 whitespace-pre-wrap font-sans">
-                {toText(localTrailer.description)}
-              </pre>
-            </div>
-          </div>
-        )}
-
         {/* Actions toolbar */}
         <div className="flex flex-wrap gap-3 items-center">
           <Button
@@ -767,14 +762,6 @@ This step only runs when you click:
           </Button>
 
           <Button
-            onClick={handleApiGenerateTrailer}
-            disabled={isTrailerApiLoading || !screenplay.trim()}
-            className="bg-fuchsia-600 hover:bg-fuchsia-700"
-          >
-            {isTrailerApiLoading ? "Generating via API…" : "Generate Trailer (API)"}
-          </Button>
-
-          <Button
             variant="outline"
             onClick={handleManualScan}
             disabled={!startedPrefixes.length || scanBusy}
@@ -792,10 +779,6 @@ This step only runs when you click:
             </div>
           )}
         </div>
-
-        {trailerApiError && (
-          <div className="text-xs text-red-400">{toText(trailerApiError)}</div>
-        )}
 
         {/* Storyboard shots list */}
         <div className="space-y-2">

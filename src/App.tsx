@@ -224,6 +224,22 @@ export default function App() {
     void handleGenerateStoryboard(projectData.screenplay);
   };
 
+  const handleStoryboardNext = (payload: StoryboardCharactersPayload) => {
+    setProjectData(prev => ({
+      ...prev,
+      storychars: payload,
+      trailerArtifacts: {
+        ...(prev.trailerArtifacts ?? { storyboardShots: [], stills: [], clips: [], startedPrefixes: [] }),
+        storyboardShots: (payload.shots || []).map(s => ({
+          id: s.id,
+          prompt: s.prompt,
+          negative: s.negative,
+        })),
+      },
+    }));
+    nextStep();
+  };
+
   // ---- Auto-Forge Orchestrator ----
   async function runFullWorkflow() {
     if (isAutoRun) return;
@@ -423,7 +439,7 @@ export default function App() {
                     loading={isStoryboardGenerating}
                     error={storyboardError}
                     onRetry={retryGenerateStoryboard}
-                    onNext={nextStep}
+                    onNext={handleStoryboardNext}
                     onBack={() => goToStep('screenplay')}
                   />
                 )}
